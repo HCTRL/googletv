@@ -37,7 +37,7 @@ export class Messages {
   }
 
   // not sure what any of these do
-  createRemoteConfigure() {
+  remoteConfigure() {
     return this.create({
       remoteConfigure: {
         code1: 622,
@@ -53,11 +53,11 @@ export class Messages {
     })
   }
 
-  createRemoteSetActive(active: number) {
+  remoteSetActive(active: number) {
     return this.create({ remoteSetActive: { active } })
   }
 
-  createRemotePingResponse(val1: number) {
+  pingResponse(val1: number) {
     return this.create({ remotePingResponse: { val1 } })
   }
 

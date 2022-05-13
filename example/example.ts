@@ -4,7 +4,8 @@ import readline from "readline"
 import { readFileSync, writeFileSync } from "fs"
 import path from "path"
 
-const GOOGLE_TV_ADDR = "192.168.0.69"
+// this could be the IP or hostname of the GoogleTV
+const GOOGLE_TV_ADDR = "gtv"
 
 const line = readline.createInterface({
   input: process.stdin,

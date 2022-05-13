@@ -11,10 +11,10 @@ export { RemoteKeyCode } from "./proto/remotemessage"
 const log = debug("main")
 
 export class GoogleTV extends EventEmitter {
-  options: GTV.GoogleTVOptions
+  public options: GTV.GoogleTVOptions
 
-  pairingManager?: PairingManager
-  remoteManager?: RemoteManager
+  public pairingManager: PairingManager
+  public remoteManager: RemoteManager
 
   static defaultOptions: GTV.GoogleTVOptions = {
     certificate: {
@@ -35,6 +35,9 @@ export class GoogleTV extends EventEmitter {
     super()
 
     this.options = { ...GoogleTV.defaultOptions, ...options }
+
+    this.pairingManager = new PairingManager(this.host, this.options)
+    this.remoteManager = new RemoteManager(this.host, this.options)
 
     log(`new GoogleTV host=${host} options=${JSON.stringify(this.options)}`)
   }
@@ -62,10 +65,10 @@ export class GoogleTV extends EventEmitter {
   }
 
   sendKey = (...args: Parameters<RemoteManager["sendKey"]>) => {
-    this.remoteManager?.sendKey(...args)
+    this.remoteManager.sendKey(...args)
   }
 
-  sendPairingCode = async (code: string) => this.pairingManager?.sendPairingCode(code)
+  sendPairingCode = async (code: string) => this.pairingManager.sendPairingCode(code)
 }
 
 // this provides type-safety for the GoogleTV event emitter

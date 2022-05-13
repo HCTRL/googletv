@@ -127,7 +127,7 @@ export class PairingManager extends EventEmitter {
         log("pairing successful")
         this.socket?.destroy()
       } else {
-        log("somethings fucked")
+        log("something is fucked")
       }
     }
 

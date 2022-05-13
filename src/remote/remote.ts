@@ -1,6 +1,7 @@
 import type { RemoteKeyCode } from "../proto/remotemessage"
-import { RemoteDirection } from "../proto/remotemessage"
 import type { GTV } from "types"
+
+import { RemoteDirection } from "../proto/remotemessage"
 
 import EventEmitter from "events"
 import { Messages } from "./remoteMessages"
@@ -8,19 +9,6 @@ import tls from "tls"
 
 import { debug } from "../util"
 const log = debug("remote")
-
-interface RemoteManagerEvents {
-  unpaired: () => void
-}
-
-// this provides type-safety for the GoogleTV event emitter
-export declare interface RemoteManager {
-  on<U extends keyof RemoteManagerEvents>(event: U, listener: RemoteManagerEvents[U]): this
-  emit<U extends keyof RemoteManagerEvents>(
-    event: U,
-    ...args: Parameters<RemoteManagerEvents[U]>
-  ): boolean
-}
 export class RemoteManager extends EventEmitter {
   private socket?: tls.TLSSocket
   private chunks = Buffer.from([])
@@ -76,6 +64,7 @@ export class RemoteManager extends EventEmitter {
 
         if (hasError) {
           reject(this.error)
+          this.emit("error", this.error)
         }
       })
     })
@@ -93,13 +82,51 @@ export class RemoteManager extends EventEmitter {
     log.extend("received")(message.toJSON())
 
     if (message.remoteConfigure) {
+      //? i believe this initializes the remote
       log("remoteConfigure")
-      this.socket?.write(this.messages.createRemoteConfigure())
+      this.socket?.write(this.messages.remoteConfigure())
+      this.emit("ready")
     } else if (message.remoteSetActive) {
-      this.socket?.write(this.messages.createRemoteSetActive(622))
+      //? set the remote to "active"
+      this.socket?.write(this.messages.remoteSetActive(622))
     } else if (message.remotePingRequest) {
+      //? self-explanatory
       const value = message.remotePingRequest.val1
-      this.socket?.write(this.messages.createRemotePingResponse(value))
+      this.socket?.write(this.messages.pingResponse(value))
+    } else if (message.remoteKeyInject) {
+      //? this is the currently-running app
+      const app = message.remoteImeKeyInject?.appInfo?.appPackage
+      log.extend("current-app")(app)
+      this.emit("currentApp", app)
+    } else if (message.remoteImeBatchEdit) {
+      // log(`remoteImeBatchEdit ${message.remoteImeBatchEdit}`)
+    } else if (message.remoteImeShowRequest) {
+      // log(`remoteImeShowRequest ${message.remoteImeShowRequest}`)
+    } else if (message.remoteVoiceBegin) {
+      // log(`remoteVoiceBegin ${message.remoteVoiceBegin}`)
+    } else if (message.remoteVoicePayload) {
+      // log(`remoteVoicePayload ${message.remoteVoicePayload}`)
+    } else if (message.remoteVoiceEnd) {
+      // log(`remoteVoiceEnd ${message.remoteVoiceEnd}`)
+    } else if (message.remoteStart) {
+      log.extend("power-state")(message.remoteStart.started ? "on" : "off")
+      this.emit("power", message.remoteStart.started)
+    } else if (message.remoteSetVolumeLevel) {
+      const state = {
+        current: message.remoteSetVolumeLevel.volumeLevel,
+        max: message.remoteSetVolumeLevel.volumeMax,
+        isMuted: message.remoteSetVolumeLevel.volumeMuted,
+      }
+
+      log.extend("volume-state")(state)
+      this.emit("volumeState", state)
+    } else if (message.remoteSetPreferredAudioDevice) {
+      // log(`remoteSetPreferredAudioDevice ${message.remoteSetPreferredAudioDevice}`)
+    } else if (message.remoteError) {
+      log.extend("error")(message.remoteError)
+      this.emit("error", { error: message.remoteError })
+    } else {
+      log("something is fucked")
     }
 
     this.chunks = Buffer.from([])
@@ -108,4 +135,16 @@ export class RemoteManager extends EventEmitter {
   sendKey = (key: RemoteKeyCode, pressType: RemoteDirection = RemoteDirection.SHORT) => {
     this.socket?.write(this.messages.remoteKeyInject(key, pressType))
   }
+}
+
+// this provides type-safety for the RemoteManager event emitter
+export declare interface RemoteManager {
+  on<U extends keyof GTV.RemoteManagerEvents>(
+    event: U,
+    listener: GTV.RemoteManagerEvents[U]
+  ): this
+  emit<U extends keyof GTV.RemoteManagerEvents>(
+    event: U,
+    ...args: Parameters<GTV.RemoteManagerEvents[U]>
+  ): boolean
 }
