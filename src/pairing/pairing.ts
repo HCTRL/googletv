@@ -4,23 +4,12 @@ import EventEmitter from "events"
 import tls from "tls"
 import Crypto from "crypto-js"
 
-import { debug, hexStringToBytes } from "../util"
-
 import { PairingMessage_Status } from "../proto/pairingmessage"
 import { Messages } from "./pairingMessages"
 
+import { debug, hexStringToBytes } from "../util"
 const log = debug("pairing")
 
-export interface PairingManagerEvents {
-  secret: () => void
-}
-export declare interface PairingManager {
-  on<U extends keyof PairingManagerEvents>(event: U, listener: PairingManagerEvents[U]): this
-  emit<U extends keyof PairingManagerEvents>(
-    event: U,
-    ...args: Parameters<PairingManagerEvents[U]>
-  ): boolean
-}
 export class PairingManager extends EventEmitter {
   private socket?: tls.TLSSocket
   private chunks = Buffer.from([])
@@ -55,7 +44,7 @@ export class PairingManager extends EventEmitter {
       this.socket.on("secureConnect", () => {
         log("pairing socket connected securely")
 
-        const pairingRequest = this.messages.createPairingRequest()
+        const pairingRequest = this.messages.pairingRequest()
         this.socket?.write(pairingRequest)
       })
 
@@ -67,6 +56,38 @@ export class PairingManager extends EventEmitter {
         else resolve(true)
       })
     })
+  }
+
+  private onData = (data: Parameters<typeof Buffer.from>[0]) => {
+    const buffer = Buffer.from(data)
+
+    // TODO: check if this needs to be on the class instance
+    this.chunks = Buffer.concat([this.chunks, buffer])
+
+    if (this.chunks.length <= 0) return
+    if (this.chunks.readInt8(0) !== this.chunks.length - 1) return
+
+    const message = this.messages.parse(this.chunks)
+    log.extend("received")(message)
+
+    if (message.status !== PairingMessage_Status.STATUS_OK) {
+      this.socket?.destroy(new Error(message.status.toString()))
+    } else {
+      if (message.pairingRequestAck) {
+        this.socket?.write(this.messages.pairingOption())
+      } else if (message.pairingOption) {
+        this.socket?.write(this.messages.pairingConfiguration())
+      } else if (message.pairingConfigurationAck) {
+        this.emit("secret")
+      } else if (message.pairingSecretAck) {
+        log("pairing successful")
+        this.socket?.destroy()
+      } else {
+        log("something is fucked")
+      }
+    }
+
+    this.chunks = Buffer.from([])
   }
 
   sendPairingCode(code: string) {
@@ -97,40 +118,19 @@ export class PairingManager extends EventEmitter {
       this.socket.destroy(new Error("bad code"))
       return false
     } else {
-      this.socket.write(this.messages.createPairingSecret(Buffer.from(hash_array)))
+      this.socket.write(this.messages.pairingSecret(Buffer.from(hash_array)))
       return true
     }
   }
+}
 
-  private onData = (data: Parameters<typeof Buffer.from>[0]) => {
-    const buffer = Buffer.from(data)
-
-    // TODO: check if this needs to be on the class instance
-    this.chunks = Buffer.concat([this.chunks, buffer])
-
-    if (this.chunks.length <= 0) return
-    if (this.chunks.readInt8(0) !== this.chunks.length - 1) return
-
-    const message = this.messages.parse(this.chunks)
-    log.extend("received")(message)
-
-    if (message.status !== PairingMessage_Status.STATUS_OK) {
-      this.socket?.destroy(new Error(message.status.toString()))
-    } else {
-      if (message.pairingRequestAck) {
-        this.socket?.write(this.messages.createPairingOption())
-      } else if (message.pairingOption) {
-        this.socket?.write(this.messages.createPairingConfiguration())
-      } else if (message.pairingConfigurationAck) {
-        this.emit("secret")
-      } else if (message.pairingSecretAck) {
-        log("pairing successful")
-        this.socket?.destroy()
-      } else {
-        log("something is fucked")
-      }
-    }
-
-    this.chunks = Buffer.from([])
-  }
+export declare interface PairingManager {
+  on<U extends keyof GTV.PairingManagerEvents>(
+    event: U,
+    listener: GTV.PairingManagerEvents[U]
+  ): this
+  emit<U extends keyof GTV.PairingManagerEvents>(
+    event: U,
+    ...args: Parameters<GTV.PairingManagerEvents[U]>
+  ): boolean
 }

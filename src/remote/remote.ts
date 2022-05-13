@@ -9,6 +9,7 @@ import tls from "tls"
 
 import { debug } from "../util"
 const log = debug("remote")
+
 export class RemoteManager extends EventEmitter {
   private socket?: tls.TLSSocket
   private chunks = Buffer.from([])

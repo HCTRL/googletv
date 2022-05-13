@@ -17,6 +17,10 @@ export namespace GTV {
     error: (error: unknown) => void
   }
 
+  export interface PairingManagerEvents {
+    secret: () => void
+  }
+
   export interface Certificate {
     cert: string
     key: string

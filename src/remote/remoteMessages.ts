@@ -2,12 +2,10 @@ import type { RemoteDirection, RemoteKeyCode, RemoteMessage } from "../proto/rem
 import type { PartialDeep } from "type-fest"
 import type { GTV } from "types"
 
-import { debug, LIBRARY_NAME } from "../util"
-
-import {} from "../proto/remotemessage"
 import protobuf from "protobufjs"
 import path from "path"
 
+import { debug, LIBRARY_NAME } from "../util"
 const log = debug("remote")
 
 export class Messages {
@@ -23,8 +21,13 @@ export class Messages {
 
     const message = this.RemoteMessage.create(payload)
 
-    log.extend("sending")(payload)
+    log.extend("sending")(message.toJSON())
     return this.RemoteMessage.encodeDelimited(message).finish()
+  }
+
+  parse = (buffer: Buffer) => {
+    const decoded = this.RemoteMessage.decodeDelimited(buffer) as unknown
+    return decoded as protobuf.Message & RemoteMessage
   }
 
   remoteKeyInject = (key: RemoteKeyCode, pressType: RemoteDirection) => {
@@ -59,10 +62,5 @@ export class Messages {
 
   pingResponse(val1: number) {
     return this.create({ remotePingResponse: { val1 } })
-  }
-
-  parse = (buffer: Buffer) => {
-    const decoded = this.RemoteMessage.decodeDelimited(buffer) as unknown
-    return decoded as protobuf.Message & RemoteMessage
   }
 }

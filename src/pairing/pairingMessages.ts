@@ -2,8 +2,6 @@ import type { PairingMessage } from "../proto/pairingmessage"
 import type { PartialDeep } from "type-fest"
 import type { GTV } from "types"
 
-import { debug } from "../util"
-
 import {
   PairingEncoding_EncodingType,
   PairingMessage_Status,
@@ -12,6 +10,7 @@ import {
 import protobuf from "protobufjs"
 import path from "path"
 
+import { debug } from "../util"
 const log = debug("pairing")
 
 export class Messages {
@@ -32,10 +31,11 @@ export class Messages {
   }
 
   parse = (buffer: Buffer) => {
-    return this.PairingMessage.decodeDelimited(buffer) as unknown as PairingMessage
+    const decoded = this.PairingMessage.decodeDelimited(buffer) as unknown
+    return decoded as protobuf.Message & PairingMessage
   }
 
-  createPairingRequest = () => {
+  pairingRequest = () => {
     log("creating pairing request")
     return this.create({
       pairingRequest: {
@@ -47,7 +47,7 @@ export class Messages {
     })
   }
 
-  createPairingOption = () => {
+  pairingOption = () => {
     return this.create({
       pairingOption: {
         preferredRole: RoleType.ROLE_TYPE_INPUT,
@@ -63,7 +63,7 @@ export class Messages {
     })
   }
 
-  createPairingConfiguration = () => {
+  pairingConfiguration = () => {
     return this.create({
       pairingConfiguration: {
         clientRole: RoleType.ROLE_TYPE_INPUT,
@@ -77,7 +77,7 @@ export class Messages {
     })
   }
 
-  createPairingSecret = (secret: Buffer) => {
+  pairingSecret = (secret: Buffer) => {
     return this.create({
       pairingSecret: { secret },
       status: PairingMessage_Status.STATUS_OK,
