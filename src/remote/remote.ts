@@ -94,7 +94,7 @@ export class RemoteManager extends EventEmitter {
       //? self-explanatory
       const value = message.remotePingRequest.val1
       this.socket?.write(this.messages.pingResponse(value))
-    } else if (message.remoteKeyInject) {
+    } else if (message.remoteImeKeyInject) {
       //? this is the currently-running app
       const app = message.remoteImeKeyInject?.appInfo?.appPackage
       log.extend("current-app")(app)
