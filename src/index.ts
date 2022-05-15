@@ -13,8 +13,8 @@ const log = debug("main")
 export class GoogleTV extends EventEmitter {
   public options: GTV.GoogleTVOptions
 
-  public pairingManager: PairingManager
-  public remoteManager: RemoteManager
+  public pairing: PairingManager
+  public remote: RemoteManager
 
   static defaultOptions: GTV.GoogleTVOptions = {
     certificate: {
@@ -36,8 +36,8 @@ export class GoogleTV extends EventEmitter {
 
     this.options = { ...GoogleTV.defaultOptions, ...options }
 
-    this.pairingManager = new PairingManager(this.host, this.options)
-    this.remoteManager = new RemoteManager(this.host, this.options)
+    this.pairing = new PairingManager(this.host, this.options)
+    this.remote = new RemoteManager(this.host, this.options)
 
     log(`new GoogleTV host=${host} options=${JSON.stringify(this.options)}`)
   }
@@ -45,30 +45,30 @@ export class GoogleTV extends EventEmitter {
   ensurePaired = async () => {
     if (!this.options.certificate?.cert || !this.options.certificate?.key) {
       this.options.certificate = generateCertificate(this.options.serviceName)
-      this.pairingManager = new PairingManager(this.host, this.options)
+      this.pairing = new PairingManager(this.host, this.options)
 
-      this.pairingManager.on("secret", () => this.emit("secretCodeRequest"))
+      this.pairing.on("secret", () => this.emit("secretCodeRequest"))
 
-      const paired = await this.pairingManager.pair()
+      const paired = await this.pairing.pair()
       if (!paired) throw new Error("pairing failed")
     }
   }
 
   init = async () => {
     await this.ensurePaired()
-    this.remoteManager = new RemoteManager(this.host, this.options)
+    this.remote = new RemoteManager(this.host, this.options)
 
     // TODO: check if this can be removed
     await wait(1e3)
 
-    await this.remoteManager.init()
+    await this.remote.init()
   }
 
   sendKey = (...args: Parameters<RemoteManager["sendKey"]>) => {
-    this.remoteManager.sendKey(...args)
+    this.remote.sendKey(...args)
   }
 
-  sendPairingCode = async (code: string) => this.pairingManager.sendPairingCode(code)
+  sendPairingCode = async (code: string) => this.pairing.sendPairingCode(code)
 }
 
 // this provides type-safety for the GoogleTV event emitter

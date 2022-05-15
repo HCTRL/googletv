@@ -5,7 +5,7 @@ import { readFileSync, writeFileSync } from "fs"
 import path from "path"
 
 // this could be the IP or hostname of the GoogleTV
-const GOOGLE_TV_ADDR = "gtv"
+const GOOGLE_TV_ADDR = "192.168.0.132"
 
 const line = readline.createInterface({
   input: process.stdin,
@@ -33,6 +33,13 @@ const line = readline.createInterface({
 
   await gtv.init()
   writeFileSync(CERT_PATH, JSON.stringify(gtv.options.certificate))
+
+  gtv.remote.on("power", state => console.log("power", state))
+  gtv.remote.on("currentApp", app => console.log("currentApp", app))
+  gtv.remote.on("volumeState", state => console.log("volumeState", state))
+  gtv.remote.on("error", error => console.error("error", error))
+  gtv.remote.on("ready", () => console.log("ready"))
+  gtv.remote.on("unpaired", () => console.log("unpaired"))
 
   process.stdin.on("keypress", async (_, key) => {
     if (key.name === "up") gtv.sendKey(RemoteKeyCode.KEYCODE_DPAD_UP)

@@ -11,7 +11,7 @@
   "license": "MIT",
   "author": "vaaski <admin@vaa.ski>",
   "scripts": {
-    "build": "rimraf dist && tsc",
+    "build": "rimraf dist && tsc -p tsconfig.build.json",
     "example": "npx ts-node ./example/example.ts",
     "example:debug": "DEBUG=hctrl/googletv:* npx ts-node ./example/example.ts",
     "prepare": "npm run build",
