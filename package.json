@@ -11,7 +11,8 @@
   "license": "MIT",
   "author": "vaaski <admin@vaa.ski>",
   "scripts": {
-    "build": "rimraf dist && tsc -p tsconfig.build.json",
+    "build": "rimraf dist && tsc -p tsconfig.build.json && npm run copy-proto",
+    "copy-proto": "shx cp src/proto/remotemessage.proto src/proto/pairingmessage.proto dist/proto",
     "example": "npx ts-node ./example/example.ts",
     "example:debug": "DEBUG=hctrl/googletv:* npx ts-node ./example/example.ts",
     "prepare": "npm run build",
@@ -37,6 +38,7 @@
     "eslint-plugin-prettier": "^4.0.0",
     "prettier": "^2.6.2",
     "rimraf": "^3.0.2",
+    "shx": "^0.3.4",
     "ts-node": "^10.7.0",
     "ts-proto": "^1.112.1",
     "type-fest": "^2.12.2",

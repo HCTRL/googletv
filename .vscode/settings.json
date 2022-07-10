@@ -8,5 +8,8 @@
       "fileMatch": ["nodemon.json"],
       "url": "https://raw.githubusercontent.com/SchemaStore/schemastore/master/src/schemas/json/nodemon.json"
     }
+  ],
+  "cSpell.words": [
+    "proto"
   ]
 }
