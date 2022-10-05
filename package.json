@@ -22,7 +22,8 @@
     "proto": "protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_opt=unrecognizedEnum=false --ts_proto_opt=esModuleInterop=true --ts_proto_out=. ./src/proto/remotemessage.proto ./src/proto/pairingmessage.proto"
   },
   "files": [
-    "dist/**/*"
+    "dist/**/*",
+    "types/**/*"
   ],
   "devDependencies": {
     "@types/crypto-js": "^4.1.1",
