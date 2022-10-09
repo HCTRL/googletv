@@ -1,5 +1,5 @@
 import type { RemoteKeyCode } from "../proto/remotemessage"
-import type { GTV } from "types"
+import type { GTV } from "../../types"
 
 import { RemoteDirection } from "../proto/remotemessage"
 
